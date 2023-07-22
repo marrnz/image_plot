@@ -1,24 +1,43 @@
 mod dbscan;
+mod spatial_heatmap;
 
-use std::cell::RefCell;
-use dbscan::{calculate, Point};
+use crate::dbscan::calculate;
+
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl Point {
+    fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+}
 
 pub fn do_it() {
-    let data_set = vec![
-        RefCell::new(Point::new(1., 1.)),
-        RefCell::new(Point::new(2., 2.)),
-        RefCell::new(Point::new(3., 3.)),
-        RefCell::new(Point::new(7., 7.)),
-        RefCell::new(Point::new(8., 8.)),
-        RefCell::new(Point::new(9., 9.)),
-        RefCell::new(Point::new(7., 7.)),
-        RefCell::new(Point::new(8., 8.)),
-        RefCell::new(Point::new(9., 9.)),
-        RefCell::new(Point::new(12., 12.)),
-        RefCell::new(Point::new(13., 13.)),
-        RefCell::new(Point::new(14., 14.)),
-    ];
+    let data_set = include_str!("../test_data/mcdonalds_stripped.csv");
+    let data_set = data_set
+        .lines()
+        .enumerate()
+        .map(|(idx, line)| {
+            line.split(",")
+                .take(2)
+                .map(|value| value.parse::<f64>().expect(format!("WTF in line {}", idx).as_str()))
+                .collect::<Vec<f64>>()
+        })
+        .map(|split_line| Point::new(split_line[0], split_line[1]))
+        .collect();
+
+    //DBSCAN Test
+
+    /*
     let result = calculate(data_set, 3., 2);
+    println!("My Result: {:?}", result);
+    */
+    let result = spatial_heatmap::calculate(&data_set, 180., 360., (1., 1.))
+    .iter()
+    .filter(|c| **c > 0)
+    .collect::<Vec<usize>>();
     println!("My Result: {:?}", result);
 }
 
