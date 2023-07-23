@@ -23,7 +23,8 @@ pub fn do_it() {
                 .map(|value| value.parse::<f64>().expect(format!("WTF in line {}", idx).as_str()))
                 .collect::<Vec<f64>>()
         })
-        .map(|split_line| Point::new(split_line[0], split_line[1]))
+        // file has latitude first, but longitude represents x and latitude y so we have to swap it
+        .map(|split_line| Point::new(split_line[1], split_line[0]))
         .collect();
 
     //DBSCAN Test
@@ -32,7 +33,7 @@ pub fn do_it() {
     let result = calculate(data_set, 3., 2);
     println!("My Result: {:?}", result);
     */
-    let result = spatial_heatmap::calculate(&data_set, 360, 180, (1, 1));
+    let result = spatial_heatmap::calculate(&data_set, 360, 180, (1, 1), true);
     //println!("My Result: {:?}", result);
 }
 
