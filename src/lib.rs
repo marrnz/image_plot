@@ -1,8 +1,6 @@
 mod dbscan;
 mod spatial_heatmap;
 
-use crate::dbscan::calculate;
-
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -34,11 +32,8 @@ pub fn do_it() {
     let result = calculate(data_set, 3., 2);
     println!("My Result: {:?}", result);
     */
-    let result = spatial_heatmap::calculate(&data_set, 180., 360., (1., 1.))
-    .iter()
-    .filter(|c| **c > 0)
-    .collect::<Vec<usize>>();
-    println!("My Result: {:?}", result);
+    let result = spatial_heatmap::calculate(&data_set, 360, 180, (1, 1));
+    //println!("My Result: {:?}", result);
 }
 
 #[cfg(test)]
