@@ -1,3 +1,4 @@
+use hsl::HSL;
 use image::ImageBuffer;
 
 use crate::Point;
@@ -8,6 +9,7 @@ struct Grid {
     cell_size: (u32, u32),
     cells: Vec<usize>,
     normalize: bool,
+    max_value: usize
 }
 
 impl Grid {
@@ -22,6 +24,7 @@ impl Grid {
             cell_size,
             cells,
             normalize: normalize_data,
+            max_value: 0
         }
     }
 
@@ -34,7 +37,11 @@ impl Grid {
             cell_y = cell_y + norm_vector_y as i64;
         }
         let index = self.idx_from_point(cell_x as usize, cell_y as usize);
-        self.cells[index] = self.cells[index] + 1;
+        let value = self.cells[index] + 1;
+        self.cells[index] = value;
+        if value > self.max_value {
+            self.max_value = value
+        }
     }
 
     fn idx_from_point(&self, x: usize, y: usize) -> usize {
@@ -45,6 +52,10 @@ impl Grid {
         let x = index % self.width;
         let y = index / self.width;
         (x as u32, y as u32)
+    }
+
+    pub fn pixels_from_cell() {
+        
     }
 }
 
@@ -62,14 +73,27 @@ pub fn calculate(
 }
 
 fn draw(width: u32, height: u32, grid: &Grid) {
-    let mut img = ImageBuffer::from_fn(width, height, |_, _| image::Rgb::<u8>([0, 0, 0]));
+    let mut img = ImageBuffer::from_fn(width, height, |_, _| image::Rgba::<u8>([0, 0, 0, 255]));
     for (idx, counter) in (&grid.cells).iter().enumerate() {
         if *counter > 0 {
-            let (x, mut y) = grid.point_from_idx(idx);
+            let (mut x, mut y) = grid.point_from_idx(idx);
+            // TODO: paint all pixels within cell
+            x = x * grid.cell_size.0;
+            y = y * grid.cell_size.1;
             // graph library starts y at the top left so we have to adjust (grid has origin in the bottom left)
             y = height - y;
-            img.put_pixel(x, y, image::Rgb([255, 0, 0]));
+            img.put_pixel(x, y, counter_to_rgb(grid, *counter));
         }
     }
     img.save("test_data/png/test.png").unwrap();
+}
+
+fn counter_to_rgb(grid: &Grid, counter: usize) -> image::Rgba<u8> {
+    if grid.max_value != 0 {
+        let h = (1. - (counter as f64 / grid.max_value as f64)) * 240.;
+        let hsl = HSL {h, s: 1., l: 0.5};
+        let rgb = hsl.to_rgb();
+        return image::Rgba([rgb.0, rgb.1, rgb.2, 125]);
+    }
+    image::Rgba([255, 255, 255, 0])
 }

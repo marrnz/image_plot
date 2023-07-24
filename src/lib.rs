@@ -51,7 +51,7 @@ pub fn do_it() {
     let result = calculate(data_set, 3., 2);
     println!("My Result: {:?}", result);
     */
-    let result = spatial_heatmap::calculate(&data_set, 360, 180, (1, 1), true);
+    let result = spatial_heatmap::calculate(&data_set, 360, 180, (5, 5), true);
     //println!("My Result: {:?}", result);
 }
 
