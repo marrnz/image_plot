@@ -109,7 +109,21 @@ impl Grid {
         (x as u32, y as u32)
     }
 
-    pub fn pixels_from_cell() {}
+    pub fn get_pixels_from_cell(&self, index: usize) -> Vec<(u32, u32)> {
+        let mut pixels: Vec<(u32, u32)> = Vec::new();
+        let (x, y) = self.point_from_idx(index);
+        let start_pixel_x = x * self.cell_size.0;
+        // graph library starts y at the top left so we have to adjust (grid has origin in the bottom left)
+        let start_pixel_y = (self.height as u32 * self.cell_size.1) - (y * self.cell_size.1);
+
+        for x_increment in 0..self.cell_size.0 {
+            for y_increment in 0..self.cell_size.1 {
+                pixels.push((start_pixel_x + x_increment, start_pixel_y - y_increment));
+            }
+        }
+
+        pixels
+    }
 }
 
 pub fn calculate(
@@ -136,13 +150,9 @@ fn draw(width: u32, height: u32, grid: &Grid) {
     let mut img = ImageBuffer::from_fn(width, height, |_, _| image::Rgba::<u8>([0, 0, 0, 255]));
     for (idx, counter) in (&grid.cells).iter().enumerate() {
         if *counter > 0 {
-            let (mut x, mut y) = grid.point_from_idx(idx);
-            // TODO: paint all pixels within cell
-            x = x * grid.cell_size.0;
-            y = y * grid.cell_size.1;
-            // graph library starts y at the top left so we have to adjust (grid has origin in the bottom left)
-            y = height - y;
-            img.put_pixel(x, y, counter_to_rgb(grid, *counter));
+            grid.get_pixels_from_cell(idx)
+                .iter()
+                .for_each(|&(x, y)| img.put_pixel(x, y, counter_to_rgb(grid, *counter)));
         }
     }
     img.save("test_data/png/test.png").unwrap();
