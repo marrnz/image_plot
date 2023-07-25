@@ -3,17 +3,70 @@ use image::ImageBuffer;
 
 use crate::Point;
 
+pub struct HeatmapConfig {
+    // TODO: Remove as config and evaluate by itself
+    pub contains_negatives: bool,
+    pub suppression_strategy: Option<SuppressionStrategy>,
+}
+
 struct Grid {
     width: usize,
     height: usize,
     cell_size: (u32, u32),
     cells: Vec<usize>,
-    normalize: bool,
-    max_value: usize
+    config: HeatmapConfig,
+    max_value: usize,
+}
+
+pub enum SuppressionStrategy {
+    Thresholding,
+    Clipping,
+    LogarithmicScaling,
+    Removing(RemoveConfig),
+}
+
+trait OutlierSuppression {
+    fn suppress(&self, cells: &mut Vec<usize>);
+}
+
+struct ThresholdConfig;
+struct ClipConfig;
+struct LogarithmicScalingConfig;
+pub struct RemoveConfig {
+    pub threshold: usize,
+}
+
+impl OutlierSuppression for ThresholdConfig {
+    fn suppress(&self, cells: &mut Vec<usize>) {
+        todo!()
+    }
+}
+
+impl OutlierSuppression for ClipConfig {
+    fn suppress(&self, cells: &mut Vec<usize>) {
+        todo!()
+    }
+}
+
+impl OutlierSuppression for LogarithmicScalingConfig {
+    fn suppress(&self, cells: &mut Vec<usize>) {
+        todo!()
+    }
+}
+
+impl OutlierSuppression for RemoveConfig {
+    fn suppress(&self, cells: &mut Vec<usize>) {
+        // elements can't be removed because it skews the grid
+        // instead removing means zeroing the entry
+        cells
+            .iter_mut()
+            .filter(|counter| **counter > self.threshold)
+            .for_each(|counter| *counter = 0)
+    }
 }
 
 impl Grid {
-    fn new(width: u32, height: u32, cell_size: (u32, u32), normalize_data: bool) -> Self {
+    fn new(width: u32, height: u32, cell_size: (u32, u32), config: HeatmapConfig) -> Self {
         let grid_width = (width / cell_size.0) as usize;
         let grid_height: usize = (height / cell_size.1) as usize;
         let cells = vec![0; grid_width * grid_height];
@@ -23,24 +76,26 @@ impl Grid {
             height: grid_height,
             cell_size,
             cells,
-            normalize: normalize_data,
-            max_value: 0
+            config,
+            max_value: 0,
         }
     }
 
     fn increment_count(&mut self, point: &Point) {
         let mut cell_x = f64::ceil(point.x / self.cell_size.0 as f64) as i64;
         let mut cell_y = f64::ceil(point.y / self.cell_size.1 as f64) as i64;
-        if self.normalize {
+        if self.config.contains_negatives {
             let (norm_vector_x, norm_vector_y) = (self.width / 2, self.height / 2);
             cell_x = cell_x + norm_vector_x as i64;
             cell_y = cell_y + norm_vector_y as i64;
         }
         let index = self.idx_from_point(cell_x as usize, cell_y as usize);
-        let value = self.cells[index] + 1;
-        self.cells[index] = value;
-        if value > self.max_value {
-            self.max_value = value
+        self.cells[index] = self.cells[index] + 1;
+    }
+
+    fn evaluate_max_value(&mut self) {
+        if let Some(max) = self.cells.iter().max() {
+            self.max_value = *max;
         }
     }
 
@@ -54,9 +109,7 @@ impl Grid {
         (x as u32, y as u32)
     }
 
-    pub fn pixels_from_cell() {
-        
-    }
+    pub fn pixels_from_cell() {}
 }
 
 pub fn calculate(
@@ -64,10 +117,17 @@ pub fn calculate(
     width: u32,
     height: u32,
     cell_size: (u32, u32),
-    normalize_data: bool,
+    config: HeatmapConfig,
 ) -> Vec<usize> {
-    let mut grid = Grid::new(width, height, cell_size, normalize_data);
+    let mut grid = Grid::new(width, height, cell_size, config);
     data_set.iter().for_each(|p| grid.increment_count(p));
+    if let Some(suppression_strategy) = &grid.config.suppression_strategy {
+        match suppression_strategy {
+            SuppressionStrategy::Removing(config) => config.suppress(&mut grid.cells),
+            _ => {}
+        }
+    }
+    grid.evaluate_max_value();
     draw(width, height, &grid);
     grid.cells
 }
@@ -91,7 +151,7 @@ fn draw(width: u32, height: u32, grid: &Grid) {
 fn counter_to_rgb(grid: &Grid, counter: usize) -> image::Rgba<u8> {
     if grid.max_value != 0 {
         let h = (1. - (counter as f64 / grid.max_value as f64)) * 240.;
-        let hsl = HSL {h, s: 1., l: 0.5};
+        let hsl = HSL { h, s: 1., l: 0.5 };
         let rgb = hsl.to_rgb();
         return image::Rgba([rgb.0, rgb.1, rgb.2, 125]);
     }
