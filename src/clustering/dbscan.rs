@@ -23,8 +23,11 @@ impl From<Point> for DBSCANPoint {
 type Cluster = Vec<usize>;
 
 // TODO: Revisit algorithm, see https://github.com/s3rvac/blog/blob/master/en-2017-01-01-implementing-dbscan-from-distance-matrix-in-rust/src/dbscan.rs
-pub fn calculate(data_set: Vec<Point>, eps: f64, min_pts: usize) -> HashMap<usize, Vec<usize>>{
-    let data_set: Vec<RefCell<DBSCANPoint>> = data_set.into_iter().map(|p| RefCell::new(DBSCANPoint::from(p))).collect();
+pub fn cluster(data_set: Vec<Point>, eps: f64, min_pts: usize) -> HashMap<usize, Vec<usize>> {
+    let data_set: Vec<RefCell<DBSCANPoint>> = data_set
+        .into_iter()
+        .map(|p| RefCell::new(DBSCANPoint::from(p)))
+        .collect();
     let mut clusters: HashMap<usize, Cluster> = HashMap::new();
     for i in 0..data_set.len() {
         if let Ok(mut point) = data_set[i].try_borrow_mut() {
