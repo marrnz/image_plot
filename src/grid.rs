@@ -39,10 +39,8 @@ impl Grid {
         self.cells[index] = self.cells[index] + 1;
     }
 
-    pub fn evaluate_max_value(&mut self) {
-        if let Some(max) = self.cells.iter().max() {
-            self.max_value = *max;
-        }
+    pub fn evaluate_max_value(&self) -> Option<&usize> {
+        self.cells.iter().max()
     }
 
     pub fn idx_from_point(&self, x: usize, y: usize) -> usize {

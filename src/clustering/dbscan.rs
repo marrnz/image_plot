@@ -5,8 +5,8 @@ use crate::Point;
 pub struct DBSCANPoint {
     pub x: f64,
     pub y: f64,
+    kind: PointKind,
     visited: bool,
-    is_noise: bool,
 }
 
 impl From<Point> for DBSCANPoint {
@@ -15,9 +15,15 @@ impl From<Point> for DBSCANPoint {
             x: value.x,
             y: value.y,
             visited: false,
-            is_noise: false,
+            kind: PointKind::Noise,
         }
     }
+}
+
+enum PointKind {
+    Core,
+    Border,
+    Noise,
 }
 
 type Cluster = Vec<usize>;
@@ -37,11 +43,10 @@ pub fn cluster(data_set: Vec<Point>, eps: f64, min_pts: usize) -> HashMap<usize,
             point.visited = true;
         }
         let neighbours = region_query(&data_set, eps, &data_set[i]);
-        if neighbours.len() < min_pts {
+        if neighbours.len() > min_pts {
             if let Ok(mut point) = data_set[i].try_borrow_mut() {
-                point.is_noise = true;
+                point.kind = PointKind::Core;
             }
-        } else {
             clusters.insert(i, Vec::new());
             expand_cluster(i, &data_set, neighbours, &mut clusters, eps, min_pts)
         }
@@ -75,7 +80,7 @@ fn expand_cluster<'a>(
             .flat_map(|cluster| cluster.iter())
             .any(|point_indexes| *point_indexes == idx);
         if !already_in_cluster {
-            neighbours[i].borrow_mut().is_noise = false;
+            neighbours[i].borrow_mut().kind = PointKind::Border;
             clusters.get_mut(&center_idx).unwrap().push(idx);
         }
     }

@@ -1,11 +1,12 @@
 mod clustering;
-mod outlier;
-mod spatial_heatmap;
 mod draw;
 mod grid;
+mod outlier;
+mod smoothing;
+mod spatial_heatmap;
 
-use spatial_heatmap::{calculate, HeatmapConfig};
 use outlier::suppression::{RemoveConfig, SuppressionStrategy};
+use spatial_heatmap::{create_heatmap, HeatmapConfig};
 
 pub struct Point {
     pub x: f64,
@@ -18,7 +19,7 @@ impl Point {
     }
 }
 
-pub fn do_it() {
+pub fn do_it() -> Result<(), String> {
     let data_set = include_str!("../test_data/global_terrorism_stripped.csv");
     let data_set = data_set
         .lines()
@@ -44,8 +45,7 @@ pub fn do_it() {
             threshold: 200,
         })),
     };
-    calculate(&data_set, 360, 180, (1, 1), config);
-    //println!("My Result: {:?}", result);
+    create_heatmap(&data_set, 360, 180, (1, 1), config)
 }
 
 #[cfg(test)]
@@ -54,6 +54,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        do_it();
+        let _ = do_it();
     }
 }
