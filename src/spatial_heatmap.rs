@@ -47,7 +47,7 @@ pub fn create_heatmap(
         let (x, y) = grid.point_from_idx(idx);
         grid_points.push(Point::new(x as f64, y as f64));
     }
-    let clustered_result = cluster(grid_points, 5., 5);
+    //let clustered_result = cluster(grid_points, 5., 5);
     draw_image(width, height, &grid)
 }
 

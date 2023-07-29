@@ -45,7 +45,7 @@ pub fn do_it() -> Result<(), String> {
             threshold: 200,
         })),
     };
-    create_heatmap(&data_set, 360, 180, (1, 1), config)
+    create_heatmap(&data_set, 720, 360, (1, 1), config)
 }
 
 #[cfg(test)]
