@@ -19,6 +19,9 @@ impl Point {
     }
 }
 
+type Pixel = u32;
+type GridUnit = usize;
+
 pub fn do_it() -> Result<(), String> {
     let data_set = include_str!("../test_data/global_terrorism_stripped.csv");
     let data_set = data_set
@@ -40,12 +43,13 @@ pub fn do_it() -> Result<(), String> {
         .collect();
 
     let config = HeatmapConfig {
+        cell_size: (4, 4),
         contains_negatives: true,
         suppression_strategy: Some(SuppressionStrategy::Removing(RemoveConfig {
             threshold: 200,
         })),
     };
-    create_heatmap(&data_set, 720, 360, (1, 1), config)
+    create_heatmap(&data_set, 1440, 720, config)
 }
 
 #[cfg(test)]
