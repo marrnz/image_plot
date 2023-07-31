@@ -6,7 +6,7 @@ mod smoothing;
 mod spatial_heatmap;
 
 use outlier::suppression::{RemoveConfig, SuppressionStrategy};
-use spatial_heatmap::{create_heatmap, HeatmapConfig};
+use spatial_heatmap::{create_heatmap, CoordinateSystem, Config};
 
 pub struct Point {
     pub x: f64,
@@ -19,7 +19,7 @@ impl Point {
     }
 }
 
-type Pixel = u32;
+type ImageUnit = u32;
 type GridUnit = usize;
 
 pub fn do_it() -> Result<(), String> {
@@ -42,14 +42,22 @@ pub fn do_it() -> Result<(), String> {
         .map(|split_line| Point::new(split_line[1], split_line[0]))
         .collect();
 
-    let config = HeatmapConfig {
-        cell_size: (4, 4),
-        contains_negatives: true,
-        suppression_strategy: Some(SuppressionStrategy::Removing(RemoveConfig {
+    let coordinate_system = CoordinateSystem {
+        min_x_axis: -180,
+        max_x_axis: 180,
+        min_y_axis: -90,
+        max_y_axis: 90,
+    };
+    let config = Config::new(
+        coordinate_system,
+        (2, 2),
+        720,
+        360,
+        Some(SuppressionStrategy::Removing(RemoveConfig {
             threshold: 200,
         })),
-    };
-    create_heatmap(&data_set, 1440, 720, config)
+    );
+    create_heatmap(&data_set, config)
 }
 
 #[cfg(test)]

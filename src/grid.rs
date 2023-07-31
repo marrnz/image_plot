@@ -1,21 +1,24 @@
-use crate::{GridUnit, Point, Pixel};
+use crate::{GridUnit, Point};
 
-use super::spatial_heatmap::HeatmapConfig;
+use super::spatial_heatmap::Config;
 
-pub struct Grid {
+pub struct Grid<'a> {
     pub grid_width: GridUnit,
     pub grid_height: GridUnit,
     pub cells: Vec<usize>,
-    pub config: HeatmapConfig,
+    pub config: &'a Config,
     pub max_value: usize,
 }
 
-impl Grid {
-    pub fn new(config: &HeatmapConfig) -> Self {
-        let grid_width = (conbfig. / config.cell_size.0) as GridUnit;
-        let grid_height: usize = (height / config.cell_size.1) as GridUnit;
+impl<'a> Grid<'a> {
+    pub fn new(config: &'a Config) -> Self {
+        let max_width = isize::abs(config.coordinate_system.min_x_axis) as usize
+            + config.coordinate_system.max_x_axis;
+        let max_height = isize::abs(config.coordinate_system.min_y_axis) as usize
+            + config.coordinate_system.max_y_axis;
+        let grid_width = max_width / config.cell_size.0;
+        let grid_height = max_height / config.cell_size.1;
         let cells = vec![0; grid_width * grid_height];
-
         Self {
             grid_width,
             grid_height,
@@ -28,7 +31,7 @@ impl Grid {
     pub fn increment_count(&mut self, point: &Point) {
         let mut cell_x = f64::ceil(point.x / self.config.cell_size.0 as f64) as i64;
         let mut cell_y = f64::ceil(point.y / self.config.cell_size.1 as f64) as i64;
-        if self.config.contains_negatives {
+        if self.config.has_negative_values {
             let (norm_vector_x, norm_vector_y) = (self.grid_width / 2, self.grid_height / 2);
             cell_x = cell_x + norm_vector_x as i64;
             cell_y = cell_y + norm_vector_y as i64;
