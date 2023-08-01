@@ -34,16 +34,16 @@ fn counter_to_rgb(max_value: usize, counter: usize) -> image::Rgba<u8> {
 }
 
 fn get_pixels_from_cell(grid: &Grid, config: &Config, index: usize) -> Vec<(ImageUnit, ImageUnit)> {
-    let wide_pixels_per_cell = config.image_width / grid.grid_width as u32;
-    let high_pixels_per_cell = config.image_height / grid.grid_height as u32;
+    let x_pixels_per_cell = config.image_width / grid.grid_width as u32;
+    let y_pixels_per_cell = config.image_height / grid.grid_height as u32;
     let mut pixels: Vec<(ImageUnit, ImageUnit)> = Vec::new();
     let (x, y) = grid.point_from_idx(index);
-    let start_pixel_x = (x * grid.config.cell_size.0) as ImageUnit;
+    let start_pixel_x = x as ImageUnit * x_pixels_per_cell;
     // graph library starts y at the top left so we have to adjust (grid has origin in the bottom left)
-    let start_pixel_y = grid.config.image_height - (y * grid.config.cell_size.1) as ImageUnit;
+    let start_pixel_y = grid.config.image_height - y as ImageUnit * y_pixels_per_cell;
 
-    for x_increment in 0..wide_pixels_per_cell {
-        for y_increment in 0..high_pixels_per_cell {
+    for x_increment in 0..x_pixels_per_cell {
+        for y_increment in 0..y_pixels_per_cell {
             pixels.push((
                 start_pixel_x + x_increment as ImageUnit,
                 start_pixel_y - y_increment as ImageUnit,

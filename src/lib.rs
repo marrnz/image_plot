@@ -50,9 +50,9 @@ pub fn do_it() -> Result<(), String> {
     };
     let config = Config::new(
         coordinate_system,
-        (2, 2),
+        (1, 1),
+        1440,
         720,
-        360,
         Some(SuppressionStrategy::Removing(RemoveConfig {
             threshold: 200,
         })),
