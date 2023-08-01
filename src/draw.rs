@@ -10,7 +10,7 @@ pub fn draw_image(config: &Config, grid: &Grid) -> Result<(), String> {
         .evaluate_max_value()
         .ok_or("Error finding max intensity")?;
 
-    let mut img = ImageBuffer::from_fn(config.image_width, config.image_height, |_, _| image::Rgba::<u8>([0, 0, 0, 255]));
+    let mut img = ImageBuffer::from_fn(config.image_width, config.image_height, |_, _| image::Rgba::<u8>([0, 0, 0, 0]));
     for (idx, counter) in (&grid.cells).iter().enumerate() {
         if *counter > 0 {
             get_pixels_from_cell(grid, config, idx)
