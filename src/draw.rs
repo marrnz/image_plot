@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use hsl::HSL;
-use image::{imageops::colorops::contrast_in_place, ImageBuffer};
+use image::ImageBuffer;
 
-use crate::{spatial_heatmap::Config, GridUnit, ImageUnit};
+use crate::{spatial_heatmap::Config, ImageUnit};
 
 use super::grid::Grid;
 
@@ -38,9 +38,6 @@ pub fn draw_cluster(
     });
     for (&idx, cluster) in &cluster_data {
         let color = counter_to_rgb(*max_value, idx);
-        get_pixels_from_cell(grid, config, idx)
-            .iter()
-            .for_each(|&(x, y)| img.put_pixel(x, y, color));
         for point in cluster {
             get_pixels_from_cell(grid, config, *point)
                 .iter()
@@ -72,10 +69,12 @@ fn get_pixels_from_cell(grid: &Grid, config: &Config, index: usize) -> Vec<(Imag
 
     for x_increment in 0..x_pixels_per_cell {
         for y_increment in 0..y_pixels_per_cell {
-            pixels.push((
-                start_pixel_x + x_increment as ImageUnit,
-                start_pixel_y - y_increment as ImageUnit,
-            ));
+            let x_pixel = start_pixel_x + x_increment as ImageUnit;
+            let y_pixel = start_pixel_y - y_increment as ImageUnit;
+
+            if x_pixel < config.image_width && y_pixel < config.image_height {
+                pixels.push((x_pixel, y_pixel));
+            }
         }
     }
 

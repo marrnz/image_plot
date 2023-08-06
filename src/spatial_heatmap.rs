@@ -1,8 +1,9 @@
 use crate::{
-    draw::{draw_image, draw_cluster},
+    clustering::dbscan::cluster,
+    draw::{draw_cluster, draw_image},
     grid::Grid,
     outlier::suppression::{OutlierSuppression, SuppressionStrategy},
-    GridUnit, ImageUnit, Point, clustering::dbscan::cluster,
+    GridUnit, ImageUnit, Point,
 };
 
 pub struct CoordinateSystem {
@@ -62,20 +63,26 @@ fn suppress_outliers(grid: &mut Grid) {
 pub fn create_heatmap(data_set: &Vec<Point>, config: Config) -> Result<(), String> {
     let mut grid = get_intensity_grid(data_set, &config);
     suppress_outliers(&mut grid);
-    let mut grid_points: Vec<Point> = Vec::with_capacity(grid.cells.len());
-    for idx in 0..grid.cells.len() {
-        let (x, y) = grid.point_from_idx(idx);
-        grid_points.push(Point::new(x as f64, y as f64));
-    }
     let cluster_data = grid
         .cells
         .iter()
-        .filter(|&intensity| *intensity > 0)
         .enumerate()
-        .map(|(idx, _)| idx)
+        .map(|(idx, intensity)| {
+            if *intensity == 0 {
+                return None;
+            }
+            Some(idx)
+        })
+        .collect::<Vec<Option<usize>>>();
+    let cluster_data = cluster_data
+        .iter()
+        .filter(|opt| opt.is_some())
+        .map(|opt| opt.unwrap())
         .map(|idx| grid.point_from_idx(idx))
         .collect::<Vec<(GridUnit, GridUnit)>>();
     let cluster_data = cluster(cluster_data, 5., 5);
-    draw_cluster(&config, &grid, cluster_data)
-    //draw_image(&config, &grid)
+    //draw_cluster(&config, &grid, cluster_data)
+    //let grid_length = grid.cells.len();
+    //let max_idx = cluster_data.values().flat_map(|v| v.iter()).max().unwrap();
+    draw_image(&config, &grid)
 }

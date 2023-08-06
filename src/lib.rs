@@ -6,7 +6,7 @@ mod smoothing;
 mod spatial_heatmap;
 
 use outlier::suppression::{RemoveConfig, SuppressionStrategy};
-use spatial_heatmap::{create_heatmap, CoordinateSystem, Config};
+use spatial_heatmap::{create_heatmap, Config, CoordinateSystem};
 
 pub struct Point {
     pub x: f64,

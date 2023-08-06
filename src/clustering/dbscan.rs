@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, fmt::Display};
+use std::{cell::RefCell, collections::HashMap};
 
 use crate::GridUnit;
 
@@ -112,9 +112,9 @@ fn calculate_distance(center: &RefCell<DBSCANPoint>, p2: &RefCell<DBSCANPoint>) 
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
     use super::*;
-    
+    use std::vec;
+
     #[test]
     fn should_cluster_data() {
         let data_set = vec![
