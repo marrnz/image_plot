@@ -1,19 +1,19 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, fmt::Display};
 
-use crate::Point;
+use crate::GridUnit;
 
 pub struct DBSCANPoint {
-    pub x: f64,
-    pub y: f64,
+    pub x: GridUnit,
+    pub y: GridUnit,
     kind: PointKind,
     visited: bool,
 }
 
-impl From<Point> for DBSCANPoint {
-    fn from(value: Point) -> Self {
+impl From<(GridUnit, GridUnit)> for DBSCANPoint {
+    fn from((x, y): (GridUnit, GridUnit)) -> Self {
         Self {
-            x: value.x,
-            y: value.y,
+            x,
+            y,
             visited: false,
             kind: PointKind::Noise,
         }
@@ -29,7 +29,11 @@ enum PointKind {
 type Cluster = Vec<usize>;
 
 // TODO: Revisit algorithm, see https://github.com/s3rvac/blog/blob/master/en-2017-01-01-implementing-dbscan-from-distance-matrix-in-rust/src/dbscan.rs
-pub fn cluster(data_set: Vec<Point>, eps: f64, min_pts: usize) -> HashMap<usize, Vec<usize>> {
+pub fn cluster(
+    data_set: Vec<(GridUnit, GridUnit)>,
+    eps: f64,
+    min_pts: usize,
+) -> HashMap<usize, Cluster> {
     let data_set: Vec<RefCell<DBSCANPoint>> = data_set
         .into_iter()
         .map(|p| RefCell::new(DBSCANPoint::from(p)))
@@ -43,7 +47,7 @@ pub fn cluster(data_set: Vec<Point>, eps: f64, min_pts: usize) -> HashMap<usize,
             point.visited = true;
         }
         let neighbours = region_query(&data_set, eps, &data_set[i]);
-        if neighbours.len() > min_pts {
+        if neighbours.len() >= min_pts {
             if let Ok(mut point) = data_set[i].try_borrow_mut() {
                 point.kind = PointKind::Core;
             }
@@ -98,8 +102,42 @@ fn region_query<'a>(
 }
 
 fn calculate_distance(center: &RefCell<DBSCANPoint>, p2: &RefCell<DBSCANPoint>) -> f64 {
-    let base: f64 = 2.;
-    let distance =
-        base.powf(p2.borrow().x - center.borrow().x) + base.powf(p2.borrow().y - center.borrow().y);
+    let exponent: u32 = 2;
+    let x = p2.borrow().x as isize - center.borrow().x as isize;
+    let y = p2.borrow().y as isize - center.borrow().y as isize;
+    let distance = x.pow(exponent) + y.pow(exponent);
+    let distance = distance as f64;
     distance.sqrt().abs()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::vec;
+    use super::*;
+    
+    #[test]
+    fn should_cluster_data() {
+        let data_set = vec![
+            (1, 1),
+            (2, 2),
+            (3, 3),
+            (8, 8),
+            (12, 12),
+            (24, 24),
+            (26, 26),
+            (27, 27),
+        ];
+
+        let result = cluster(data_set, 3., 3);
+
+        let mut expected: HashMap<GridUnit, Vec<GridUnit>> = HashMap::new();
+        expected.insert(0, vec![0, 1, 2]);
+        expected.insert(6, vec![5, 6, 7]);
+        for (_, cluster) in result {
+            assert!(expected
+                .iter()
+                .map(|(_, expected_cluster)| expected_cluster)
+                .any(|expected_cluster| *expected_cluster == cluster));
+        }
+    }
 }

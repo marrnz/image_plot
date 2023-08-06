@@ -51,8 +51,8 @@ pub fn do_it() -> Result<(), String> {
     let config = Config::new(
         coordinate_system,
         (1, 1),
-        2000,
-        1267,
+        1440,
+        720,
         Some(SuppressionStrategy::Removing(RemoveConfig {
             threshold: 200,
         })),

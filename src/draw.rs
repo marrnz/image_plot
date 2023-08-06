@@ -1,7 +1,9 @@
-use hsl::HSL;
-use image::{ImageBuffer, imageops::colorops::contrast_in_place};
+use std::collections::HashMap;
 
-use crate::{ImageUnit, spatial_heatmap::Config, GridUnit};
+use hsl::HSL;
+use image::{imageops::colorops::contrast_in_place, ImageBuffer};
+
+use crate::{spatial_heatmap::Config, GridUnit, ImageUnit};
 
 use super::grid::Grid;
 
@@ -10,7 +12,9 @@ pub fn draw_image(config: &Config, grid: &Grid) -> Result<(), String> {
         .evaluate_max_value()
         .ok_or("Error finding max intensity")?;
 
-    let mut img = ImageBuffer::from_fn(config.image_width, config.image_height, |_, _| image::Rgba::<u8>([0, 0, 0, 0]));
+    let mut img = ImageBuffer::from_fn(config.image_width, config.image_height, |_, _| {
+        image::Rgba::<u8>([0, 0, 0, 0])
+    });
     for (idx, counter) in (&grid.cells).iter().enumerate() {
         if *counter > 0 {
             get_pixels_from_cell(grid, config, idx)
@@ -20,6 +24,30 @@ pub fn draw_image(config: &Config, grid: &Grid) -> Result<(), String> {
     }
     //TODO: return byte array, impl. debug mode for saving result
     img.save("test_data/png/test.png").unwrap();
+    Ok(())
+}
+
+pub fn draw_cluster(
+    config: &Config,
+    grid: &Grid,
+    cluster_data: HashMap<usize, Vec<usize>>,
+) -> Result<(), String> {
+    let max_value = cluster_data.iter().map(|entry| entry.0).max().unwrap();
+    let mut img = ImageBuffer::from_fn(config.image_width, config.image_height, |_, _| {
+        image::Rgba::<u8>([0, 0, 0, 255])
+    });
+    for (&idx, cluster) in &cluster_data {
+        let color = counter_to_rgb(*max_value, idx);
+        get_pixels_from_cell(grid, config, idx)
+            .iter()
+            .for_each(|&(x, y)| img.put_pixel(x, y, color));
+        for point in cluster {
+            get_pixels_from_cell(grid, config, *point)
+                .iter()
+                .for_each(|&(x, y)| img.put_pixel(x, y, color));
+        }
+    }
+    img.save("test_data/png/test_cluster.png").unwrap();
     Ok(())
 }
 
@@ -56,7 +84,7 @@ fn get_pixels_from_cell(grid: &Grid, config: &Config, index: usize) -> Vec<(Imag
 
 #[cfg(test)]
 mod tests {
-    use crate::spatial_heatmap::{CoordinateSystem, Config};
+    use crate::spatial_heatmap::{Config, CoordinateSystem};
 
     use super::*;
 

@@ -8,7 +8,7 @@
 ### Gaussian Kernel Convolution
 
 ### Bug fixes
-- Scaling image does not scale grid
+- Scaling image does not scale grid - fixed?
 - DBSCAN performance
 
 ### Proper Error Handling
