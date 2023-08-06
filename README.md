@@ -10,6 +10,7 @@
 ### Bug fixes
 - Scaling image does not scale grid - fixed?
 - DBSCAN performance
+- DBSCAN clustering or drawing of clusters wrong? visualization is broken
 
 ### Proper Error Handling
 
